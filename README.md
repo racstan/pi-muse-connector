@@ -4,8 +4,13 @@
 
 ```
 Meta Muse ──(POST /api/pi-task)──▶ pi-muse-connector ──(pi --print)──▶ Pi agent
-              (poll job status)         sandboxed runner               free models
+              (poll job status)      your own machine,                your key,
+                                     one Docker command               your bill
 ```
+
+**Self-hosted by design.** You run it on your machine — no central server,
+no sign-up, nobody else's bill. One Docker command, one free tunnel, and
+Pi lives inside your Muse.
 
 ## What a Muse user can do
 
@@ -18,24 +23,59 @@ Meta Muse ──(POST /api/pi-task)──▶ pi-muse-connector ──(pi --print
 
 ## Use it today — custom connector (no review, no wait)
 
-Meta Muse can build a custom connector from any public API spec:
+You host it yourself in about two minutes. Meta's servers make the connector
+calls, so `localhost` won't do — you need a public HTTPS URL. A free
+Cloudflare Tunnel gives you one with zero config:
 
-1. Deploy this service (see below) so it has a public HTTPS URL.
-2. Open Muse and paste the prompt from [SETUP-PROMPT.md](./SETUP-PROMPT.md).
-3. Muse writes and tests the client, saves it — then ask away.
+```bash
+# 1. Run the connector (put your provider key in the env)
+docker build -t pi-muse-connector .
+docker run -d -p 3000:3000 -e OPENROUTER_API_KEY=your_key_here pi-muse-connector
+
+# 2. Expose it (free, no account needed for quick tunnels)
+cloudflared tunnel --url http://localhost:3000
+# → gives you https://something.trycloudflare.com
+```
+
+Then in Muse:
+
+1. Paste the prompt from [SETUP-PROMPT.md](./SETUP-PROMPT.md), replacing the
+   host with your tunnel URL.
+2. Muse builds and tests the connector, saves it — then ask away.
+
+Prefer your key sealed in Muse's vault instead of in the container env?
+Skip the `-e` flag and let Muse send it as the `X-Pi-Api-Key` header per call.
 
 ## Directory listing
 
 Submitted for review in the Muse Connectors directory at [muse.ai/platform](https://muse.ai/platform). Once approved: one tap in Settings → Connectors.
+
+## Bring your own key
+
+Nobody pays for inference but you, and no central server ever holds a key.
+**You** bring your own AI provider key (e.g. OpenRouter) — two ways:
+
+**A. Sealed in Muse's vault (recommended).** When you connect it in Muse,
+you enter your provider API key once. Muse stores it sealed — the connector
+never sees it at rest — and sends it as the `X-Pi-Api-Key` header with each
+task.
+
+**B. In your container env.** Pass `-e OPENROUTER_API_KEY=...` to `docker run`
+(it's your machine, your key). The server uses it as a fallback when no
+header is sent.
+
+Either way, the key is used for one Pi run at a time: written into a
+job-local Pi config inside the task's sandbox directory and deleted with it
+when the job ends. You pay your provider directly, at your provider's rates.
 
 ## How Pi runs inside
 
 The container replicates the exact Pi setup recipe proven on the dev VM:
 
 1. Pi installed via npm, version pinned (`@earendil-works/pi-coding-agent@0.87.1`).
-2. On container start, `docker-entrypoint.sh` writes `~/.pi/agent/models.json`
-   from env vars (provider, model, base URL, API key) — same structure as a
-   normal Pi install, key from environment instead of a config file.
+2. Per task, the server writes a **job-local** `~/.pi/agent/models.json`
+   (via a per-job `HOME` override) containing the caller's provider, model,
+   and key — verified: Pi reads the job-local config, not any global one.
 3. Each task spawns `pi --print --no-session --provider … --model … -- "<task>"`
    with stdin ignored, in a fresh temp workdir.
 
@@ -47,44 +87,44 @@ no hangs.
 
 ```bash
 docker build -t pi-muse-connector .
-docker run -p 3000:3000 \
-  -e PI_PROVIDER=openrouter \
-  -e PI_MODEL='openrouter/free' \
-  -e OPENROUTER_API_KEY=your_key_here \
-  pi-muse-connector
+docker run -p 3000:3000 -e OPENROUTER_API_KEY=your_key_here pi-muse-connector
 ```
 
-Env vars:
+Your key can live in the container env (as above) or be sent per call as the
+`X-Pi-Api-Key` header — header wins. Either way it is used for one Pi run at
+a time and never leaves your machine.
+
+Server env vars:
 
 | Var | Default | Meaning |
 |---|---|---|
 | `PORT` | 3000 | HTTP port |
-| `PI_PROVIDER` | — | Pi provider name (e.g. `openrouter`) |
-| `PI_MODEL` | — | Pi model pattern (e.g. `openrouter/free`) |
-| `PI_KEY_ENV` | `OPENROUTER_API_KEY` | Name of the env var holding the model key |
+| `PI_PROVIDER` | `openrouter` | Default provider if caller omits `X-Pi-Provider` |
+| `PI_MODEL` | `openrouter/free` | Default model if caller omits `X-Pi-Model` |
+| `PI_KEY_ENV` | `OPENROUTER_API_KEY` | Env var holding the fallback server-side key |
 | `JOB_TIMEOUT_MS` | 300000 | Hard kill timeout per task (5 min) |
 | `RATE_LIMIT_PER_HOUR` | 5 | Max tasks per IP per hour |
 | `MAX_TASK_CHARS` | 2000 | Max task length |
-| `PI_BASE_URL` | auto per provider | Override the model API base URL (needed for custom providers) |
-
-> **Keys:** `OPENROUTER_API_KEY` (or whatever `PI_KEY_ENV` names) must be a real
-> provider key with a **spend cap** — this service executes code on your behalf
-> for strangers. Never reuse a personal key with no limit.
 
 API reference: [`openapi.json`](./openapi.json) · Agent docs: [`llms.txt`](./llms.txt) · Health: `GET /health`
 
 ## Safety model (v1)
 
 - Jobs run **one at a time**, each in a **fresh temp workdir** deleted afterwards.
-- The Pi child gets a **scrubbed environment** (PATH/HOME/TERM + the one model-key var) — host secrets never leak in.
+- The Pi child gets a **scrubbed environment** (PATH/HOME/TERM plus standard
+  network-egress vars only) — host secrets never leak in. Your provider key
+  lives only in the job-local Pi config, never in env or process args.
 - **Hard timeout** kills runaway tasks; **per-IP rate limits** blunt abuse.
 - Runs as a **non-root** user in Docker.
+- **Your provider key** is used for one Pi run only, kept inside the task's
+  sandbox, and deleted with it — never stored server-side.
 
-Known v1 limits (hardening roadmap): the sandbox is a temp dir, not a VM/gVisor boundary; the model key is server-side, so set a spend cap on it; for production, put auth (API keys) in front of `/api/pi-task`. Do not expose this without understanding those tradeoffs.
+Known v1 limits (hardening roadmap): the sandbox is a temp dir, not a VM/gVisor boundary; for production, put auth in front of `/api/pi-task` beyond the per-IP rate limit. Do not expose this without understanding those tradeoffs.
 
 ## Costs
 
-You pay for the model inference behind Pi. Use free-tier models (e.g. OpenRouter free) + the built-in rate limits to keep it near zero.
+You pay your own provider directly for the inference your tasks use — e.g.
+OpenRouter's free models cost nothing. The connector operator pays nothing.
 
 ---
 
