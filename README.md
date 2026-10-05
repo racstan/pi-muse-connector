@@ -28,6 +28,21 @@ Meta Muse can build a custom connector from any public API spec:
 
 Submitted for review in the Muse Connectors directory at [muse.ai/platform](https://muse.ai/platform). Once approved: one tap in Settings → Connectors.
 
+## How Pi runs inside
+
+The container replicates the exact Pi setup recipe proven on the dev VM:
+
+1. Pi installed via npm, version pinned (`@earendil-works/pi-coding-agent@0.87.1`).
+2. On container start, `docker-entrypoint.sh` writes `~/.pi/agent/models.json`
+   from env vars (provider, model, base URL, API key) — same structure as a
+   normal Pi install, key from environment instead of a config file.
+3. Each task spawns `pi --print --no-session --provider … --model … -- "<task>"`
+   with stdin ignored, in a fresh temp workdir.
+
+Verified: a real Pi run (OpenRouter free model) completed a file-writing task
+end to end with exit 0 — `--print` mode auto-approves tool calls, no prompts,
+no hangs.
+
 ## Self-host
 
 ```bash
@@ -50,6 +65,11 @@ Env vars:
 | `JOB_TIMEOUT_MS` | 300000 | Hard kill timeout per task (5 min) |
 | `RATE_LIMIT_PER_HOUR` | 5 | Max tasks per IP per hour |
 | `MAX_TASK_CHARS` | 2000 | Max task length |
+| `PI_BASE_URL` | auto per provider | Override the model API base URL (needed for custom providers) |
+
+> **Keys:** `OPENROUTER_API_KEY` (or whatever `PI_KEY_ENV` names) must be a real
+> provider key with a **spend cap** — this service executes code on your behalf
+> for strangers. Never reuse a personal key with no limit.
 
 API reference: [`openapi.json`](./openapi.json) · Agent docs: [`llms.txt`](./llms.txt) · Health: `GET /health`
 
