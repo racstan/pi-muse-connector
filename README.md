@@ -128,4 +128,4 @@ OpenRouter's free models cost nothing. The connector operator pays nothing.
 
 ---
 
-Built by [@beechrasta](https://github.com/beechrasta)
+Built by [@racstan](https://github.com/racstan)

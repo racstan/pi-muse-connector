@@ -1,1 +1,16 @@
-{"dependencies":{"express":"^4.19.2"},"description":"Hosted API that runs Pi, the terminal coding agent, as a Meta Muse connector.","engines":{"node":">=20"},"main":"index.js","name":"pi-muse-connector","scripts":{"start":"node index.js"},"version":"1.0.0"}
+{
+  "name": "pi-muse-connector",
+  "version": "1.0.0",
+  "description": "Hosted API that runs Pi, the terminal coding agent, as a Meta Muse connector.",
+  "main": "index.js",
+  "author": "racstan",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
