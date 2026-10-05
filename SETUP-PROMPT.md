@@ -4,7 +4,7 @@ Copy everything below the line into Muse (replace the host first):
 
 ---
 
-Connect to the Pi coding-agent API for me as a custom connector.
+Connect to the Pi - Muse Connector API for me as a custom connector.
 
 - API base: https://YOUR-TUNNEL-URL.trycloudflare.com
   (I'm running the pi-muse-connector Docker image on my own machine and
@@ -13,7 +13,7 @@ Connect to the Pi coding-agent API for me as a custom connector.
 - OpenAPI spec: https://YOUR-TUNNEL-URL.trycloudflare.com/openapi.json
 - Docs: https://YOUR-TUNNEL-URL.trycloudflare.com/llms.txt
 
-What it does: it runs Pi, the terminal coding agent, on coding tasks I give you.
+What it does: it runs Pi agent (https://github.com/earendil-works/pi), the terminal coding agent, on coding tasks I give you.
 
 - `POST /api/pi-task` with `{ "task": "..." }` submits a task. It returns
   202 with a `job_id` immediately — the task runs asynchronously.

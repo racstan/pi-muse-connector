@@ -1,6 +1,6 @@
-# Pi Muse Connector
+# Pi - Muse Connector
 
-This API puts **Pi** — the terminal coding agent (https://pi.dev) — behind a
+This API puts **Pi agent** — the terminal coding agent ([GitHub: earendil-works/pi](https://github.com/earendil-works/pi), https://pi.dev) — behind a
 plain REST interface so an AI agent like Meta Muse can ask it to do coding work.
 
 ## Bring your own key

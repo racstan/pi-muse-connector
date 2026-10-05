@@ -1,7 +1,7 @@
 {
   "name": "pi-muse-connector",
   "version": "1.0.0",
-  "description": "Hosted API that runs Pi, the terminal coding agent, as a Meta Muse connector.",
+  "description": "Hosted API that runs Pi agent (https://github.com/earendil-works/pi) as a Meta Muse connector.",
   "main": "index.js",
   "author": "racstan",
   "scripts": {

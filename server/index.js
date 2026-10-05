@@ -1,7 +1,7 @@
 /**
- * Pi Muse Connector — hosted API.
+ * Pi - Muse Connector — hosted API.
  *
- * Exposes Pi (the terminal coding agent) as a plain REST API so Meta Muse
+ * Exposes Pi agent (https://github.com/earendil-works/pi) as a plain REST API so Meta Muse
  * (or any agent) can submit coding tasks and poll for results.
  *
  * BRING YOUR OWN KEY: every task carries the caller's own provider API key

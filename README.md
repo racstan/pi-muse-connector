@@ -1,6 +1,6 @@
-# Pi — Meta Muse Connector
+# Pi - Muse Connector
 
-**Ask Pi to write code, from inside Meta Muse.** This connector puts [Pi](https://pi.dev) — the terminal coding agent developers love — behind a plain REST API, so Meta Muse can hand it coding tasks and get back finished work.
+**Ask Pi agent to write code, from inside Meta Muse.** This connector puts [Pi agent](https://github.com/earendil-works/pi) ([pi.dev](https://pi.dev)) — the terminal coding agent developers love — behind a plain REST API, so Meta Muse can hand it coding tasks and get back finished work.
 
 ```
 Meta Muse ──(POST /api/pi-task)──▶ pi-muse-connector ──(pi --print)──▶ Pi agent
@@ -68,11 +68,15 @@ Either way, the key is used for one Pi run at a time: written into a
 job-local Pi config inside the task's sandbox directory and deleted with it
 when the job ends. You pay your provider directly, at your provider's rates.
 
+## About Pi Agent
+
+[Pi](https://github.com/earendil-works/pi) is an open-source terminal coding agent by [Earendil Works](https://github.com/earendil-works). It interacts with file systems and tools autonomously to complete coding tasks, write tests, diagnose issues, and scaffold projects.
+
 ## How Pi runs inside
 
 The container replicates the exact Pi setup recipe proven on the dev VM:
 
-1. Pi installed via npm, version pinned (`@earendil-works/pi-coding-agent@0.87.1`).
+1. Pi installed via npm, version pinned ([`@earendil-works/pi-coding-agent@0.87.1`](https://github.com/earendil-works/pi)).
 2. Per task, the server writes a **job-local** `~/.pi/agent/models.json`
    (via a per-job `HOME` override) containing the caller's provider, model,
    and key — verified: Pi reads the job-local config, not any global one.
