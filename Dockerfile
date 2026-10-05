@@ -12,9 +12,8 @@ COPY --chown=pirunner:pirunner server/package.json ./server/
 RUN cd server && npm install --omit=dev
 
 COPY --chown=pirunner:pirunner server/ ./server/
-COPY --chown=pirunner:pirunner openapi.json llms.txt docker-entrypoint.sh ./
-RUN chmod +x docker-entrypoint.sh
+COPY --chown=pirunner:pirunner openapi.json llms.txt ./
 
 EXPOSE 3000
 ENV PORT=3000
-ENTRYPOINT ["./docker-entrypoint.sh"]
+CMD ["node", "server/index.js"]
