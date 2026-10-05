@@ -3,9 +3,23 @@
 This API puts **Pi** — the terminal coding agent (https://pi.dev) — behind a
 plain REST interface so an AI agent like Meta Muse can ask it to do coding work.
 
+## Bring your own key
+
+Every task needs YOUR AI provider API key (e.g. an OpenRouter key). Send it as
+the `X-Pi-Api-Key` header (or the `api_key` body field). The server uses it for
+that one Pi run only: it is written into a job-local Pi config inside the
+task's sandbox directory and deleted with it when the job ends. It is never
+stored, never logged, and never sent anywhere except your provider's API.
+You pay your provider directly; the connector operator sees and spends nothing.
+
+Optional headers: `X-Pi-Provider` (default openrouter), `X-Pi-Model`
+(default openrouter/free), `X-Pi-Base-Url` (needed only for providers the
+server doesn't know; built in: openrouter, nvidia).
+
 ## How to use it
 
-1. `POST /api/pi-task` with `{ "task": "your coding task in plain words" }`.
+1. `POST /api/pi-task` with header `X-Pi-Api-Key: <your key>` and body
+   `{ "task": "your coding task in plain words" }`.
    You get back `{ "job_id": "...", "status": "queued" }` immediately (HTTP 202).
 2. `GET /api/pi-task/{job_id}` to poll. `status` moves through
    `queued` → `running` → `done` (or `failed` / `timeout`).
@@ -28,9 +42,9 @@ focused — one job per task, not a whole project.
 ## Limits
 
 - Task text max 2000 characters; results truncated at ~50k characters.
-- No authentication on this endpoint; abuse is controlled by rate limits.
 - The sandbox is a temp dir with a scrubbed environment — assume no
-  persistent filesystem and no secrets available to Pi.
+  persistent filesystem.
+- A missing key returns 401; unknown providers need `X-Pi-Base-Url`.
 
 ## Reference
 
