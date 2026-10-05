@@ -1,0 +1,1 @@
+{"dependencies":{"express":"^4.19.2"},"description":"Hosted API that runs Pi, the terminal coding agent, as a Meta Muse connector.","engines":{"node":">=20"},"main":"index.js","name":"pi-muse-connector","scripts":{"start":"node index.js"},"version":"1.0.0"}
